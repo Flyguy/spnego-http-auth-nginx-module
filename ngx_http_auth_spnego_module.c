@@ -1043,9 +1043,9 @@ ngx_http_auth_spnego_handler(
             /* If basic auth is enabled and basic creds are supplied
              * attempt basic auth.  If we attempt basic auth, we do
              * not fall through to real SPNEGO */
-            if (NGX_DECLINED == ngx_http_auth_spnego_basic(r, ctx, alcf)) {
+            if (NGX_OK != ngx_http_auth_spnego_basic(r, ctx, alcf)) {
                 spnego_debug0("Basic auth failed");
-                if (NGX_ERROR == ngx_http_auth_spnego_headers_basic_only(r, ctx, alcf)) {
+                if (NGX_OK != ngx_http_auth_spnego_headers_basic_only(r, ctx, alcf)) {
                     spnego_debug0("Error setting headers");
                     return (ctx->ret = NGX_HTTP_INTERNAL_SERVER_ERROR);
                 }
@@ -1068,19 +1068,19 @@ ngx_http_auth_spnego_handler(
     if (NGX_OK == ret) {
         spnego_debug0("Client sent a reasonable Negotiate header");
         ret = ngx_http_auth_spnego_auth_user_gss(r, ctx, alcf);
-        if (NGX_ERROR == ret) {
+        if (NGX_OK != ret) {
             spnego_debug0("GSSAPI failed");
             return (ctx->ret = NGX_HTTP_INTERNAL_SERVER_ERROR);
         }
         /* There are chances that client knows about Negotiate
          * but doesn't support GSSAPI. We could attempt to fall
          * back to basic here... */
-        if (NGX_DECLINED == ret) {
+        if (NGX_OK != ret) {
             spnego_debug0("GSSAPI failed");
             if(!alcf->allow_basic) {
                 return (ctx->ret = NGX_HTTP_FORBIDDEN);
             }
-            if (NGX_ERROR == ngx_http_auth_spnego_headers_basic_only(r, ctx, alcf)) {
+            if (NGX_OK != ngx_http_auth_spnego_headers_basic_only(r, ctx, alcf)) {
                 spnego_debug0("Error setting headers");
                 return (ctx->ret = NGX_HTTP_INTERNAL_SERVER_ERROR);
             }
@@ -1110,7 +1110,7 @@ ngx_http_auth_spnego_handler(
             break;
     }
 
-    if (NGX_ERROR == ngx_http_auth_spnego_headers(r, ctx, token_out_b64, alcf)) {
+    if (NGX_OK != ngx_http_auth_spnego_headers(r, ctx, token_out_b64, alcf)) {
         spnego_debug0("Error setting headers");
         ctx->ret = NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
